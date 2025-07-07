@@ -1,0 +1,20 @@
+# Core dependencies
+pybind11>=2.6.0
+numpy>=1.19.0
+
+# For real-time demo
+opencv-python>=4.5.0
+mediapipe>=0.8.0
+
+# For testing and development
+pytest>=6.0.0
+pytest-cov>=2.10.0
+
+# For documentation (optional)
+sphinx>=4.0.0
+sphinx-rtd-theme>=1.0.0
+
+# For development tools (optional)
+black>=21.0.0
+flake8>=3.8.0
+mypy>=0.800 

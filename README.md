@@ -237,6 +237,7 @@ This project is licensed under the same license as the original SQPnP project.
 - **Paper**: "A Consistently Fast and Globally Optimal Solution to the Perspective-n-Point Problem" by G. Terzakis and M. Lourakis (ECCV 2020)
 - **Paper URL**: https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123460460.pdf
 - **Supplementary**: https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123460460-supp.pdf
+- **OriginalImplementation**: https://github.com/terzakig/sqpnp/tree/master 
 
 ## 🆘 Support
 

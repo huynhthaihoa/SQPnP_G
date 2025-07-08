@@ -14,14 +14,16 @@
 #define _SQPNPTYPES__H_
  
   
-#ifdef HAVE_OPENCV
+// #ifdef HAVE_OPENCV
 
-#include <opencv2/core.hpp>
+// // #include <opencv2/core.hpp>
 
-#endif
+// #endif
 
 #include <iostream>
-#include <Eigen/Dense>
+
+//reroute to the Eigen3 include directory
+#include </hdd/hoa/eigen_build/include/eigen3/Eigen/Dense>
  
 namespace sqpnp
 {
@@ -39,22 +41,22 @@ namespace sqpnp
     template <class Proj>
     inline _Projection(const Proj& _projection) { *this = _projection; }
     
-    #ifdef HAVE_OPENCV
-    template <typename P>
-    _Projection& operator =(const cv::Point_<P>& _projection) 
-    {
-	vector[0] = _projection.x;
-	vector[1] = _projection.y;
-	return *this;
-    }
-    template <typename P>
-    _Projection& operator =(const cv::Vec<P, 2>& _projection) 
-    {
-	vector[0] = _projection[0];
-	vector[1] = _projection[1];
-	return *this;
-    }
-    #endif
+  //   #ifdef HAVE_OPENCV
+  //   template <typename P>
+  //   _Projection& operator =(const cv::Point_<P>& _projection) 
+  //   {
+	// vector[0] = _projection.x;
+	// vector[1] = _projection.y;
+	// return *this;
+  //   }
+  //   template <typename P>
+  //   _Projection& operator =(const cv::Vec<P, 2>& _projection) 
+  //   {
+	// vector[0] = _projection[0];
+	// vector[1] = _projection[1];
+	// return *this;
+  //   }
+  //   #endif
     
     template <typename P>
     _Projection& operator =(const Eigen::Matrix<P, 2, 1>& _projection) 
@@ -78,24 +80,24 @@ namespace sqpnp
     template <class Pt>
     inline _Point(const Pt& _point) { *this = _point; }
     
-    #ifdef HAVE_OPENCV
-    template <typename P>
-    _Point& operator =(const cv::Point3_<P>& _point) 
-    {
-	vector[0] = _point.x;
-	vector[1] = _point.y;
-	vector[2] = _point.z;
-	return *this;
-    }
-    template <typename P>
-    _Point& operator =(const cv::Vec<P, 3>& _point) 
-    {
-	vector[0] = _point[0];
-	vector[1] = _point[1];
-	vector[2] = _point[2];
-	return *this;
-    }
-    #endif
+  //   #ifdef HAVE_OPENCV
+  //   template <typename P>
+  //   _Point& operator =(const cv::Point3_<P>& _point) 
+  //   {
+	// vector[0] = _point.x;
+	// vector[1] = _point.y;
+	// vector[2] = _point.z;
+	// return *this;
+  //   }
+  //   template <typename P>
+  //   _Point& operator =(const cv::Vec<P, 3>& _point) 
+  //   {
+	// vector[0] = _point[0];
+	// vector[1] = _point[1];
+	// vector[2] = _point[2];
+	// return *this;
+  //   }
+  //   #endif
     
     template <typename P>
     _Point& operator =(const Eigen::Matrix<P, 3, 1>& _point) 

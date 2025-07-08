@@ -177,13 +177,13 @@ See `python_bindings/README.md` for detailed Python API documentation.
 ./sqpnp_cli --demo
 
 # Real data with simple pinhole camera
-./sqpnp_cli -d data.txt -c camera_pinhole_simple.txt
+./sqpnp_cli -d ../data/data.txt -c ../data/camera_pinhole_simple.txt
 
 # Real data with RANSAC
-./sqpnp_cli -d data.txt -c camera.txt -r -i 2000 -t 0.15
+./sqpnp_cli -d ../data/data.txt -c ../data/camera.txt -r -i 2000 -t 0.15
 
 # Verbose output
-./sqpnp_cli -d data.txt -c camera.txt -v
+./sqpnp_cli -d ../data/data.txt -c ../data/camera.txt -v
 ```
 
 ## 🧪 Testing

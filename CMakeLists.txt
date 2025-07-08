@@ -19,7 +19,7 @@ message(STATUS "Eigen3 Include: ${EIGEN3_INCLUDE_DIRS}")
 add_subdirectory(sqpnp)
 
 # Create the original clean example executable
-add_executable(clean_example clean_example.cpp)
+add_executable(clean_example clean_example_cli.cpp)
 
 # Link against SQPnP library and Eigen3
 target_link_libraries(clean_example SQPnP Eigen3::Eigen)

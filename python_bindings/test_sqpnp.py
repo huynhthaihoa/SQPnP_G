@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
-    import sqpnp_python
+    from sqpnp_python import sqpnp_python
 
     print("✓ Successfully imported sqpnp_python")
 except ImportError as e:

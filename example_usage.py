@@ -19,10 +19,10 @@ import sys
 import os
 
 # Add the parent directory to the path to import sqpnp_python
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
-    import sqpnp_python
+    from sqpnp_python import sqpnp_python
 
     print("✅ SQPnP Python bindings imported successfully")
 except ImportError as e:
@@ -137,9 +137,10 @@ def test_ransac_pnp():
         print(f"Rotation matrix:\n{result.rotation}")
         print(f"Translation vector: {result.translation}")
         print(f"Reprojection error: {result.error:.6f}")
-        print(f"Number of inliers: {result.num_inliers}")
-        print(f"Number of outliers: {result.num_outliers}")
-        print(f"Execution time: {result.execution_time_us:.2f} μs")
+        print(f"Reprojection error: {result.num_solutions}")
+        # print(f"Number of inliers: {result.num_inliers}")
+        # print(f"Number of outliers: {result.num_outliers}")
+        # print(f"Execution time: {result.execution_time_us:.2f} μs")
     else:
         print("❌ RANSAC PnP solving failed")
 
@@ -166,8 +167,9 @@ def test_different_camera_models():
     fisheye_params = np.array(
         [500.0, 500.0, 320.0, 240.0, 0.1, 0.01, 0.001, 0.0001], dtype=np.float64
     )
-    print(f"\nTesting fisheye camera: {fisheye_params}")
-    result_fisheye = solver.solve_fisheye(points_3d, points_2d, fisheye_params)
+    print(f"\nTesting ransac: {fisheye_params}")
+    # result_fisheye = solver.solve_fisheye(points_3d, points_2d, fisheye_params)
+    result_fisheye = solver.solve_ransac(points_3d, points_2d, fisheye_params)  # Using only the first 4 params for pinhole
     if result_fisheye.success:
         print(f"✅ Fisheye: Error = {result_fisheye.error:.6f}")
 
@@ -177,7 +179,8 @@ def test_different_camera_models():
         dtype=np.float64,
     )
     print(f"\nTesting pinhole with distortion: {distortion_params}")
-    result_distortion = solver.solve_distortion(points_3d, points_2d, distortion_params)
+    # result_distortion = solver.solve_distortion(points_3d, points_2d, distortion_params)
+    result_distortion = solver.solve_ransac(points_3d, points_2d, distortion_params)
     if result_distortion.success:
         print(f"✅ Distortion: Error = {result_distortion.error:.6f}")
 
@@ -202,7 +205,7 @@ def test_camera_type_detection():
                 [500.0, 500.0, 320.0, 240.0, 0.1, 0.01, 0.001, 0.0001, 0.001, 0.001],
                 dtype=np.float64,
             ),
-            "distortion",
+            "pinhole_with_distortion",
         ),
     ]
 

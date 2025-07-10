@@ -8,7 +8,7 @@ import sys
 import os
 
 # Add the python_bindings directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "python_bindings"))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "python_bindings"))
 
 try:
     from sqpnp_python import sqpnp_python

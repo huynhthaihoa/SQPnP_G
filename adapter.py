@@ -9,9 +9,9 @@ import psutil
 import threading
 
 # Add the python_bindings directory to path so we can import sqpnp_python
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "python_bindings"))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "python_bindings"))
 
-import sqpnp_python  # Import the new SQPnP bindings
+from sqpnp_python import sqpnp_python  # Import the new SQPnP bindings
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Head Pose Estimation with SQPnP")

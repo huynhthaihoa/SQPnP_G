@@ -1,13 +1,9 @@
 import math
 import numpy as np
 import cv2
-import mediapipe as mp
-import sys
-import os
+# import mediapipe as mp
 import time
 import argparse
-import psutil
-import threading
 
 from nets.yolox_detection_model import DetectionModel
 from nets.faciallandmark2d_model import FacialLandmark2DModel#, estimate_headpose_eareye, estimate_headpose_eyenose, estimate_headpose_earnose, draw_headpose
@@ -80,11 +76,13 @@ landmarks3d_ids_pnp = [
     # 362,  # Left inner eye
 ]
 
-face_model_pnp = np.asarray(
-    [face_model_all[i] for i in landmarks3d_ids_pnp], dtype=np.float64
-)
+face_model_pnp = face_model_all[landmarks3d_ids_pnp]
 
-landmarks_ids_pnp = [
+# np.asarray(
+#     [face_model_all[i] for i in landmarks3d_ids_pnp], dtype=np.float64
+# )
+
+landmarks2d_ids_pnp = [
     1,   # Right outer eye
     11,  # Lef outer eye
     15,   # Right outer mouth
@@ -113,7 +111,7 @@ k3 = 0.0 #dist_coeffs[4]
 k4 = 0.0  # OpenCV doesn't use k4, set to 0
 
 # Create camera parameters array (10 parameters for distortion model)
-camera_params = np.array([fx, fy, cx, cy, k1, k2, k3, k4, p1, p2], dtype=np.float64)
+camera_params = np.array([fx, fy, cx, cy, k1, k2, p1, p2], dtype=np.float64)
 
 # Performance monitoring variables
 fps_counter = 0
@@ -205,15 +203,18 @@ def define_custom_head_frame(canonical_face_model: np.ndarray):
 def draw_axes(img, rvec, tvec, K, D,roll=0, pitch=0, yaw=0, axis_length=50.0):
     """Draws the 3D coordinate axes on the image."""
     axis_points_3d = np.float32(
-        [[0, 0, 0], [axis_length, 0, 0], [0, axis_length, 0], [0, 0, axis_length]]
-    )
-    imgpts, _ = cv2.projectPoints(axis_points_3d, rvec, tvec, K, D)
+        [[0, 0, 0], [axis_length, 0, 0], [0, axis_length, 0], [0, 0, -axis_length]]
+    ).reshape(-1, 1, 3)
+    
+    # in case the camera is pinhole model, uncomment line 210 and comment line 212
+    # imgpts, _ = cv2.projectPoints(axis_points_3d, rvec, tvec, K, D)
+    
+    imgpts, _ = cv2.fisheye.projectPoints(axis_points_3d, rvec, tvec, K, D)
 
     imgpts = np.int32(imgpts).reshape(-1, 2)
     
     print("3d:", axis_points_3d.reshape(-1, 3))
     print("2d:", imgpts)
-    print("==========")
 
     origin = tuple(imgpts[0])
     cv2.line(img, origin, tuple(imgpts[1]), (0, 0, 255), 3)  # X-axis: Red
@@ -268,7 +269,7 @@ def draw_performance_info(img, fps, sqpnp_time=None, cpu_cycles=None):
     # Number of points used
     cv2.putText(
         img,
-        f"Points: {len(landmarks_ids_pnp)}",
+        f"Points: {len(landmarks2d_ids_pnp)}",
         (10, y_offset),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.6,
@@ -351,7 +352,7 @@ def main():
         height, width, _ = image.shape
 
         # Flip for selfie view, and convert BGR to RGB for MediaPipe
-        image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
+        # image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
         bbox_dict = detection_model.pipeline(image)
         if face_id in bbox_dict.keys():
             face_bboxes = bbox_dict[face_id]
@@ -371,17 +372,20 @@ def main():
                 x_max = int(x_max)
                 y_max = int(y_max)
                 landmarks_2D = faciallandmark_model.pipeline(original_frame, bbox)
-                landmarks_2d_pnp = []
+                landmarks_2d_pnp = landmarks_2D[landmarks2d_ids_pnp, :2].astype(np.float32)
                 
-                for i, landmark in enumerate(landmarks_2D):
-                    if i in landmarks_ids_pnp:
-                        landmarks_2d_pnp.append(landmark[:2])
-                        cv2.circle(image, (int(landmark[0]), int(landmark[1])), 3, (0, 255, 0), -1)
+                for landmark in landmarks_2d_pnp:
+                    cv2.circle(image, (int(landmark[0]), int(landmark[1])), 3, (0, 255, 0), -1)
                 
-                landmarks_2d_pnp = np.asarray(landmarks_2d_pnp, dtype=np.float32)
+                # for i, landmark in enumerate(landmarks_2D):
+                #     if i in landmarks_ids_pnp:
+                #         landmarks_2d_pnp.append(landmark[:2])
+                #         cv2.circle(image, (int(landmark[0]), int(landmark[1])), 3, (0, 255, 0), -1)
+                
+                # landmarks_2d_pnp = landmarks_2D[#np.asarray(landmarks_2d_pnp, dtype=np.float32)
 
                 if len(landmarks_2d_pnp) > 0:
-
+                    print("origin:", landmarks_2d_pnp)
             # Use SQPnP with RANSAC for robust pose estimation
                     sqpnp_result, sqpnp_time, cpu_cycles = measure_sqpnp_performance(
                         sqpnp_solver.solve_ransac,
@@ -432,6 +436,7 @@ def main():
 
                         # --- 5. Draw the custom axes on the image ---
                         draw_axes(image, rvec_final, t_final, cam_matrix, dist_coeffs, roll, pitch, yaw)
+
                     else:
                         print("SQPnP failed to find a solution")
                 else:

@@ -85,9 +85,10 @@ landmarks3d_ids_pnp = [
     # 362,  # Left inner eye
 ]
 
-face_model_pnp = np.asarray(
-    [face_model_all[i] for i in landmarks3d_ids_pnp], dtype=np.float64
-)
+# face_model_pnp = np.asarray(
+#     [face_model_all[i] for i in landmarks3d_ids_pnp], dtype=np.float64
+# )
+face_model_pnp = face_model_all[landmarks3d_ids_pnp]
 
 # landmarks_ids_pnp = [
 #     1,   # Right outer eye
@@ -142,15 +143,17 @@ def get_refined_landmarks(bbox, detection_result):
         face_landmarks_proto.landmark.extend([
         landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in face_landmarks
         ])
-        for i, landmark in enumerate(face_landmarks_proto.landmark):
-            if i in landmarks3d_ids_pnp:
-                normalized_landmark = landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z)
-                x = min(math.floor(normalized_landmark.x * w), w - 1) + bbox[0]
-                y = min(math.floor(normalized_landmark.y * h), h - 1) + bbox[1]
-            
-                refined_face_landmarks_list.append((x, y))
+        for landmark in face_landmarks_proto.landmark:
+            normalized_landmark = landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z)
+            x = min(math.floor(normalized_landmark.x * w), w - 1) + bbox[0]
+            y = min(math.floor(normalized_landmark.y * h), h - 1) + bbox[1]
+            refined_face_landmarks_list.append((x, y))
     
-    return np.asarray(refined_face_landmarks_list, dtype=np.float32)
+        refined_face_landmarks_list = np.asarray(refined_face_landmarks_list, dtype=np.float32)
+        return refined_face_landmarks_list[landmarks3d_ids_pnp]
+    
+    return refined_face_landmarks_list
+    # return np.asarray(refined_face_landmarks_list, dtype=np.float32)
 
 def get_cpu_cycles():
     """Get current CPU cycles (approximate)"""
@@ -406,6 +409,9 @@ def main():
                 landmarks_2d_pnp = get_refined_landmarks(face_bboxes[min_idx], detection_result)
 
                 if len(landmarks_2d_pnp) > 0:
+                #     print(face_model_pnp)
+                #     print(landmarks_2d_pnp)
+                #     exit(0)
 
             # Use SQPnP with RANSAC for robust pose estimation
                     sqpnp_result, sqpnp_time, cpu_cycles = measure_sqpnp_performance(

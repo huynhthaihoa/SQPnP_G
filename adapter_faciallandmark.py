@@ -52,7 +52,7 @@ face_model_all = np.load(FACE_MODEL_NUMPY)
 # if args.use_all_points:
 #     # Use all 468 MediaPipe landmarks
 #     landmarks_ids_pnp = list(range(468))
-#     print(f"Using all {len(landmarks_ids_pnp)} MediaPipe landmarks")
+#     # print(f"Using all {len(landmarks_ids_pnp)} MediaPipe landmarks")
 # else:
 #     # Use subset for stability and performance
 #     landmarks_ids_pnp = [
@@ -63,7 +63,7 @@ face_model_all = np.load(FACE_MODEL_NUMPY)
 #         199,  # Chin
 #         1,  # Nose tip
 #     ]
-#     print(f"Using subset of {len(landmarks_ids_pnp)} landmarks: {landmarks_ids_pnp}")
+#     # print(f"Using subset of {len(landmarks_ids_pnp)} landmarks: {landmarks_ids_pnp}")
 
 landmarks3d_ids_pnp = [
     33,   # Right outer eye
@@ -72,8 +72,8 @@ landmarks3d_ids_pnp = [
     291,  # Left outer mouth
     199,  # Chin
     1,    # Nose tip
-    # 133,  # Right inner eye
-    # 362,  # Left inner eye
+    133,  # Right inner eye
+    362,  # Left inner eye
 ]
 
 face_model_pnp = face_model_all[landmarks3d_ids_pnp]
@@ -89,8 +89,8 @@ landmarks2d_ids_pnp = [
     17,  # Left outer mouth
     23,  # Chin
     0,    # Nose tip
-    # 4,  # Right inner eye
-    # 8,  # Left inner eye
+    4,  # Right inner eye
+    8,  # Left inner eye
 ]
 
 # Initialize SQPnP solver once
@@ -200,10 +200,10 @@ def define_custom_head_frame(canonical_face_model: np.ndarray):
     return R_custom_to_mp, T_custom_to_mp
 
 
-def draw_axes(img, rvec, tvec, K, D,roll=0, pitch=0, yaw=0, axis_length=50.0):
+def draw_axes(img, rvec, tvec, K, D, axis_length=50.0):
     """Draws the 3D coordinate axes on the image."""
     axis_points_3d = np.float32(
-        [[0, 0, 0], [axis_length, 0, 0], [0, axis_length, 0], [0, 0, -axis_length]]
+        [[0, 0, 0], [-axis_length, 0, 0], [0, axis_length, 0], [0, 0, axis_length]]
     ).reshape(-1, 1, 3)
     
     # in case the camera is pinhole model, uncomment line 210 and comment line 212
@@ -213,15 +213,13 @@ def draw_axes(img, rvec, tvec, K, D,roll=0, pitch=0, yaw=0, axis_length=50.0):
 
     imgpts = np.int32(imgpts).reshape(-1, 2)
     
-    print("3d:", axis_points_3d.reshape(-1, 3))
-    print("2d:", imgpts)
+    # print("3d:", axis_points_3d.reshape(-1, 3))
+    # print("2d:", imgpts)
 
     origin = tuple(imgpts[0])
     cv2.line(img, origin, tuple(imgpts[1]), (0, 0, 255), 3)  # X-axis: Red
     cv2.line(img, origin, tuple(imgpts[2]), (0, 255, 0), 3)  # Y-axis: Green
     cv2.line(img, origin, tuple(imgpts[3]), (255, 0, 0), 3)  # Z-axis: Blue
-    cv2.putText(img, f"R: {roll * 180 / math.pi:.2f}, P: {pitch * 180 / math.pi:.2f}, Y: {yaw * 180 / math.pi:.2f}", (origin[0] + 10, origin[1] - 10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
 def draw_performance_info(img, fps, sqpnp_time=None, cpu_cycles=None):
     """Draw performance information on the image"""
@@ -277,7 +275,6 @@ def draw_performance_info(img, fps, sqpnp_time=None, cpu_cycles=None):
         2,
     )
 
-
 def main():
     """
     Main function to run the real-time custom head pose estimation.
@@ -294,8 +291,8 @@ def main():
     # Compute the static transformation from our custom frame to MediaPipe's frame
     R_custom_to_mp, T_custom_to_mp = define_custom_head_frame(face_model_all)
     
-    # print("R_custom_to_mp:\n", R_custom_to_mp)
-    # print("T_custom_to_mp:\n", T_custom_to_mp)
+    # # print("R_custom_to_mp:\n", R_custom_to_mp)
+    # # print("T_custom_to_mp:\n", T_custom_to_mp)
     # exit(0)
 
     detection_model = DetectionModel(model_path="models/detection/2025_01_03_03.onnx", 
@@ -319,18 +316,11 @@ def main():
                                                  device="cuda",
                                                  apply_all_optim=True,
                                                  scale=1.2)
+    # Input
+    video_path = "input/head_pose.mp4"
 
-    # Initialize MediaPipe Face Mesh and webcam
-    # mp_face_mesh = mp.solutions.face_mesh
-    # face_mesh = mp_face_mesh.FaceMesh(
-    #     max_num_faces=1,
-    #     refine_landmarks=True,
-    #     min_detection_confidence=0.5,
-    #     min_tracking_confidence=0.5,
-    # )
-    video_path = "head_pose.mp4"
-    
-    output_path = "head_pose_output_faciallandmark.mp4"
+    # Output
+    output_path = "output/original/head_pose.mp4"
     writer = None
     
     cap = cv2.VideoCapture(video_path)
@@ -341,18 +331,16 @@ def main():
     print(f"FPS display: {'enabled' if args.show_fps else 'disabled'}")
 
     # --- 2. Real-time Loop ---
-
+    cnt = 0
     while cap.isOpened():
         success, image = cap.read()
-        if not success:
-            print("Ignoring empty camera frame.")
+        if not success:# or cnt == 150:
             break
-            # continue
-            
+        
+        cnt += 1
+        
         height, width, _ = image.shape
 
-        # Flip for selfie view, and convert BGR to RGB for MediaPipe
-        # image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
         bbox_dict = detection_model.pipeline(image)
         if face_id in bbox_dict.keys():
             face_bboxes = bbox_dict[face_id]
@@ -377,15 +365,7 @@ def main():
                 for landmark in landmarks_2d_pnp:
                     cv2.circle(image, (int(landmark[0]), int(landmark[1])), 3, (0, 255, 0), -1)
                 
-                # for i, landmark in enumerate(landmarks_2D):
-                #     if i in landmarks_ids_pnp:
-                #         landmarks_2d_pnp.append(landmark[:2])
-                #         cv2.circle(image, (int(landmark[0]), int(landmark[1])), 3, (0, 255, 0), -1)
-                
-                # landmarks_2d_pnp = landmarks_2D[#np.asarray(landmarks_2d_pnp, dtype=np.float32)
-
                 if len(landmarks_2d_pnp) > 0:
-                    print("origin:", landmarks_2d_pnp)
             # Use SQPnP with RANSAC for robust pose estimation
                     sqpnp_result, sqpnp_time, cpu_cycles = measure_sqpnp_performance(
                         sqpnp_solver.solve_ransac,
@@ -414,28 +394,14 @@ def main():
                         # Combine rotations to get the final rotation of our custom frame
                         R_final = R_mp_to_cam @ R_custom_to_mp
 
-                        # Combine translations to get the final origin of our custom frame
-                        t_final = tvec_mp + R_mp_to_cam @ T_custom_to_mp
+                        # # Combine translations to get the final origin of our custom frame
+                        # t_final = tvec_mp + R_mp_to_cam @ T_custom_to_mp
+                        t_final_exp = tvec_mp + R_mp_to_cam @ T_custom_to_mp
 
-                        # Convert rotation matrix to rotation vector for OpenCV drawing
+                        # # Convert rotation matrix to rotation vector for OpenCV drawing
                         rvec_final, _ = cv2.Rodrigues(R_final)
-                        
-                        # print(R_final.shape, rvec_final.shape, t_final.shape)
-                        # exit(0)
 
-                        sy = math.sqrt(R_final[0][0] * R_final[0][0] + R_final[1][0] * R_final[1][0])
-                        pitch = math.atan2(-R_final[2][0], sy)#;
-                        if (sy >= 1e-6):
-        
-                            roll = math.atan2(R_final[2][1], R_final[2][2])
-                            yaw = math.atan2(R_final[1][0], R_final[0][0])
-                        else:
-                            roll = math.atan2(-R_final[1][2], R_final[1][1])
-                            yaw = 0
-
-
-                        # --- 5. Draw the custom axes on the image ---
-                        draw_axes(image, rvec_final, t_final, cam_matrix, dist_coeffs, roll, pitch, yaw)
+                        draw_axes(image, rvec_final, t_final_exp, cam_matrix, dist_coeffs)
 
                     else:
                         print("SQPnP failed to find a solution")
